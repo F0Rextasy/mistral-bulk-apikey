@@ -1,0 +1,33 @@
+{
+  "name": "mistral-bulk-apikey",
+  "version": "1.0.0",
+  "description": "Bulk-create Mistral AI accounts with auto-generated API keys — OpenAI-compatible inference + 9Router connector.",
+  "license": "MIT",
+  "type": "commonjs",
+  "bin": {
+    "mistral-bulk-apikey": "src/cli.js",
+    "mistral-bulk-apikey-launcher": "src/launcher.js"
+  },
+  "main": "src/cli.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node src/launcher.js",
+    "mint": "node src/cli.js",
+    "9router": "node src/connect-9router.js"
+  },
+  "keywords": [
+    "api-key",
+    "bulk",
+    "register",
+    "launcher",
+    "mistral",
+    "apikey"
+  ],
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ]
+}
