@@ -96,8 +96,8 @@ A free-plan key answers on the small ids and returns `429 rate_limited` for `mis
 # clone or fork this repository, then:
 cd mistral-bulk-apikey
 
-# 1) your proxy list, one per line (http://… or socks5://…)
-printf 'http://127.0.0.1:8080\n' > proxies.txt
+# 1) your proxy list, one per line (http://… or socks5://…) — optional, see below
+printf 'http://127.0.0.1:8080\n' > proxies.txt   # optional — without it the tool runs direct
 
 # 2) go
 node src/launcher.js                # interactive
@@ -171,7 +171,7 @@ node src/cli.js [mode] [flags]
 | `--count N` | 10 | accounts (= keys) to mint |
 | `--conc N` | 2 | accounts in flight (max 16) — one exit is pinned per account |
 | `--model <id>` | `mistral-tiny-latest` | pinned gate model; the fallback order follows it |
-| `--pool <file>` | `proxies.txt` | proxy list (`MISTRAL_PROXIES` env works too) |
+| `--pool <file>` | `proxies.txt` | optional proxy list (`MISTRAL_PROXIES` env works too) |
 | `--gap MS` | 800 | pause between accounts inside one worker |
 | `--tries N` | 2 | exits tried per account |
 | `--timeout MS` | 45000 | per-request timeout |
@@ -183,7 +183,13 @@ An exit that fails is rotated for the next account, and a pool line may carry a 
 
 ## 🛰️ Behind a proxy
 
-Every request leaves through an exit from your pool — the tool never dials Mistral from your own line, and **one account lives on one exit** for its entire life (Kratos binds the session to the IP it was created on). Measured on the operator's fleet: a 10-line pool put **3 exits** through to `auth.mistral.ai`, and every account that finished kept to the single exit it started on (the two that lost their exit to an unreachable pool line were retried on the next one and reported as such). `--screen` writes the survivors to `proxies.live.txt` so the next run starts from exits that already answered.
+**Optional — recommended at scale (per-IP limits, bans).** The tool works without a proxy too.
+
+- **With a pool:** pass `--pool <file>` (or set `MISTRAL_PROXIES`) and every request goes through an exit from that list — one account stays on one exit for its entire life (Kratos binds the session to the IP it was created on).
+- **Without a pool:** the CLI prints `running WITHOUT a proxy (direct)` and connects directly; the alias, the verification link, the workspace key and the chat gate all run the same way.
+- `--screen` writes the survivors to `proxies.live.txt` so the next run starts from exits that already answered — or tests the direct route when you have no pool.
+
+Measured on the operator's fleet: a 10-line pool put **3 exits** through to `auth.mistral.ai`, and every account that finished kept to the single exit it started on (the two that lost their exit to an unreachable pool line were retried on the next one and reported as such).
 
 ## 📄 Files
 

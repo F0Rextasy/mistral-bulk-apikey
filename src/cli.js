@@ -10,7 +10,9 @@
  * workspace whose billing route issues `mstrl_…` keys. No card, no phone, no
  * captcha on the free "Experiment" api_plan.
  *
- * Flow, per account, every request over one pinned exit:
+ * Flow, per account, every request over one pinned exit. Your proxy list is
+ * OPTIONAL: pass --pool (or the MISTRAL_PROXIES env) and every request goes
+ * through an exit from it; without a pool the tool connects directly:
  *   1. alias    temp.tf  GET /api/account?providers=outlook,hotmail&plus=1
  *   2. register `GET /self-service/registration/api` → csrf → `POST …?flow=…`
  *   3. verify   mail link → `GET /self-service/verification/flows?id=<flow>`
@@ -26,7 +28,7 @@
  *   --count N        accounts (= keys) to mint                     [10]
  *   --conc N         accounts in flight at once, max 16             [2]
  *   --model <id>     pinned gate model, fallbacks follow   [mistral-tiny-latest]
- *   --pool <file>    proxy list, one exit per line  (env MISTRAL_PROXIES)
+ *   --pool <file>    proxy list, one exit per line, optional (env MISTRAL_PROXIES)
  *   --gap MS         pause between accounts inside a worker         [800]
  *   --tries N        exits tried per account before giving up         [2]
  *   --timeout MS     per-request timeout                           [45000]
@@ -44,6 +46,8 @@
 
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
+const http = require('http');
 const { parseProxy, createAgent, loadPoolFile, label } = require('./vendor/proxy.js');
 const { req: httpReq } = require('./vendor/http.js');
 const { TempTf } = require('./vendor/temptf.js');
@@ -85,10 +89,10 @@ if (has('help') || has('h')) {
   --count N      accounts to mint                                 [10]
   --conc N       accounts in flight (max 16)                       [2]
   --model <id>   pinned gate model                     [mistral-tiny-latest]
-  --pool <file>  proxy list, one exit per line   (env MISTRAL_PROXIES)
+  --pool <file>  proxy list, one exit per line, optional (env MISTRAL_PROXIES)
 
-Every request leaves through an exit from your pool — the tool never dials
-Mistral from your own line.`);
+Requests go through your proxy list when one is provided (--pool / env). Without
+a pool the tool connects directly.`);
   process.exit(0);
 }
 
@@ -152,9 +156,10 @@ function loadExits() {
   const candidates = [path.resolve(ROOT, PROXY_FILE), path.resolve(PROXY_FILE)];
   const file = candidates.find((f) => fs.existsSync(f));
   if (!file) {
-    console.error(`! proxy list not found: ${PROXY_FILE} (one exit per line: http://host:port)`);
-    console.error('  this tool refuses to dial Mistral from your own address — point it at exits first.');
-    process.exit(2);
+    // No pool = DIRECT mode: a proxy is recommended at scale (per-IP limits,
+    // bans), but the tool works without one. `null` is the direct sentinel.
+    console.log(`no proxy list at ${PROXY_FILE} — running WITHOUT a proxy (direct). Put exits there (or pass --pool) to rotate per account.`);
+    return [null];
   }
   // `loadPoolFile` keeps the raw line (provenance/trailing notes) and tolerates
   // other fleets' `scheme://host:port  # exit=1.2.3.4` format.
@@ -162,8 +167,8 @@ function loadExits() {
     .map((p) => p.raw)
     .filter(Boolean);
   if (!lines.length) {
-    console.error(`! proxy list ${PROXY_FILE} is empty`);
-    process.exit(2);
+    console.log(`${PROXY_FILE} has no usable exits — running WITHOUT a proxy (direct).`);
+    return [null];
   }
   return [...new Set(lines)];
 }
@@ -179,18 +184,58 @@ async function call(px, url, { method = 'GET', headers = {}, body = null, timeou
   let last = null;
   for (let i = 0; i < tries; i++) {
     try {
-      return await httpReq(px, url, {
+      const reqOpts = {
         method,
         timeoutMs,
         headers: { 'user-agent': UA, accept: 'application/json, text/plain, */*', 'accept-language': 'en-US,en;q=0.9', ...headers },
         body,
-      });
+      };
+      return px ? await httpReq(px, url, reqOpts) : await directReq(url, reqOpts);
     } catch (e) {
       last = e;
       if (i < tries - 1) await sleep(700 * (i + 1));
     }
   }
   throw last;
+}
+
+/**
+ * The direct-mode twin of `vendor/http.js#req`: same request shape and the same
+ * `{status, headers, text, json, setCookie}` result, but the socket leaves this
+ * machine with no tunnel. Used when no pool was given (`px === null`).
+ */
+function directReq(url, { method = 'GET', headers = {}, body = null, timeoutMs = TIMEOUT_MS } = {}) {
+  return new Promise((resolve, reject) => {
+    const u = new URL(url);
+    const lib = u.protocol === 'https:' ? https : http;
+    const payload =
+      body === undefined || body === null ? null : Buffer.isBuffer(body) ? body : Buffer.from(typeof body === 'string' ? body : JSON.stringify(body));
+    const h = { ...headers };
+    if (!Object.keys(h).some((k) => k.toLowerCase() === 'accept-encoding')) h['accept-encoding'] = 'identity';
+    if (payload && !Object.keys(h).some((k) => k.toLowerCase() === 'content-type')) h['Content-Type'] = 'application/json';
+    if (payload && !Object.keys(h).some((k) => k.toLowerCase() === 'content-length')) h['Content-Length'] = payload.length;
+    const r = lib.request(
+      { method, host: u.hostname, port: u.port || (u.protocol === 'https:' ? 443 : 80), path: u.pathname + u.search, headers: h },
+      (res) => {
+        let text = '';
+        res.setEncoding('utf8');
+        res.on('data', (c) => (text += c));
+        res.on('end', () => {
+          let json = null;
+          try {
+            json = JSON.parse(text);
+          } catch (e) {
+            /* the caller may want the raw text */
+          }
+          resolve({ status: res.statusCode, headers: res.headers, text, json, setCookie: [].concat(res.headers['set-cookie'] || []) });
+        });
+      }
+    );
+    r.setTimeout(timeoutMs, () => r.destroy(new Error('timeout ' + url)));
+    r.on('error', reject);
+    if (payload) r.write(payload);
+    r.end();
+  });
 }
 
 /** A Kratos call: JSON in, cookies absorbed, `{status, json, text}` out. */
@@ -382,8 +427,8 @@ async function mintOne(exits, startExit, index) {
     // is 1, not a multiple: with a 3-line pool a `+3` step lands on the same
     // exit again and burns the whole retry budget on the dead one.
     const exitLine = attempt === 0 ? startExit : exits[(exits.indexOf(startExit) + attempt) % exits.length];
-    const px = parseProxy(exitLine);
-    if (!px) {
+    const px = exitLine ? parseProxy(exitLine) : null;
+    if (exitLine && !px) {
       say(`  ✗ #${index + 1} unparseable exit ${mask(exitLine)}`);
       continue;
     }
@@ -423,7 +468,7 @@ async function mintOne(exits, startExit, index) {
 // --------------------------------------------------------------------- modes
 
 async function screen(exits) {
-  say(`screening ${exits.length} exit(s) against ${new URL(AUTH).host}`);
+  say(`screening ${exits.filter(Boolean).length || 'direct'} exit(s) against ${new URL(AUTH).host}`);
   const live = [];
   let cursor = 0;
   await Promise.all(
@@ -431,11 +476,11 @@ async function screen(exits) {
       for (;;) {
         const i = cursor++;
         if (i >= exits.length) return;
-        const px = parseProxy(exits[i]);
+        const px = exits[i] ? parseProxy(exits[i]) : null;
         try {
           const r = await call(px, `${AUTH}/self-service/registration/api`, { timeoutMs: 15000, tries: 1 });
           if (r.status === 200) {
-            live.push(exits[i]);
+            if (exits[i]) live.push(exits[i]); // nothing to screen in direct mode
             say(`  ✓ ${mask(exits[i])} ${r.status}`);
           } else {
             say(`  ✗ ${mask(exits[i])} ${r.status}`);
@@ -447,7 +492,7 @@ async function screen(exits) {
     })
   );
   fs.writeFileSync(path.join(ROOT, 'proxies.live.txt'), live.join('\n') + (live.length ? '\n' : ''));
-  say(`screen done: ${live.length}/${exits.length} live → proxies.live.txt`);
+  say(`screen done: ${live.length}/${exits.filter(Boolean).length || 'direct'} live → proxies.live.txt`);
 }
 
 async function probe(exits) {
@@ -456,18 +501,18 @@ async function probe(exits) {
   const working = [];
   for (const ex of exits) {
     try {
-      const r = await call(parseProxy(ex), `${AUTH}/self-service/registration/api`, { timeoutMs: 15000, tries: 1 });
+      const r = await call(ex ? parseProxy(ex) : null, `${AUTH}/self-service/registration/api`, { timeoutMs: 15000, tries: 1 });
       if (r.status === 200) working.push({ ex, r });
     } catch (e) {
       /* dead exit */
     }
   }
-  say(`exits: ${working.length}/${exits.length} reach ${new URL(AUTH).host}`);
+  say(`exits: ${working.length}/${exits.filter(Boolean).length || 'direct'} reach ${new URL(AUTH).host}`);
   if (!working.length) {
     say('no exit reached Mistral — nothing further to probe');
     return;
   }
-  const px = parseProxy(working[0].ex);
+  const px = working[0].ex ? parseProxy(working[0].ex) : null;
   const rf = working[0].r;
   const fields = (((rf.json || {}).ui || {}).nodes || []).map((n) => n.attributes && n.attributes.name).filter(Boolean);
   say(`registration flow: ${rf.status} flow ${String((rf.json || {}).id || '-').slice(0, 8)}… fields ${fields.join(',') || '-'}`);
@@ -512,7 +557,7 @@ async function verifyOnly(exits) {
     // being written off — a dead free exit would otherwise look like a dead key.
     for (let attempt = 0; attempt < TRIES && !ok; attempt++) {
       const exitLine = exits[(i + attempt) % exits.length];
-      const px = parseProxy(exitLine);
+      const px = exitLine ? parseProxy(exitLine) : null;
       let exitFailed = false;
       for (const model of gateOrder()) {
         try {
@@ -551,7 +596,7 @@ async function collect() {
 }
 
 async function mint(exits) {
-  say(`minting ${COUNT} account(s), conc ${CONC}, ${exits.length} exit(s), gate ${gateOrder().join(' → ')}`);
+  say(`minting ${COUNT} account(s), conc ${CONC}, ${exits.filter(Boolean).length || 'direct'} exit(s), gate ${gateOrder().join(' → ')}`);
   let cursor = 0;
   let ok = 0;
   let failed = 0;
