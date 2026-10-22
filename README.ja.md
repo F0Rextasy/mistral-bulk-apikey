@@ -19,6 +19,7 @@
 [![License](https://img.shields.io/badge/license-MIT-6ea8fe?style=for-the-badge)](LICENSE)
 [![Models](https://img.shields.io/badge/models-45%20served-412991?style=for-the-badge)](https://docs.mistral.ai/getting-started/models/models_overview/)
 [![9Router](https://img.shields.io/badge/9Router-connector-8B5CF6?style=for-the-badge)](#-connect-to-9router)
+[![OmniRoute](https://img.shields.io/badge/OmniRoute-connector-8B5CF6?style=for-the-badge)](#-connect-to-omniroute)
 [![X](https://img.shields.io/badge/X-%40bigbullapp-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/bigbullapp)
 
 [🛠 クイックスタート](#-quick-start) · [🎁 無料枠](#-free-tier--how-much-you-get) · [🤖 モデル](#-models--all-45-of-them) · [🧪 API の使い方](#-how-to-use-the-api) · [✅ 検証済み](#-verified-working--every-key-is-tested) · [🧭 仕組み](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [⚙️ オプション](#️-cli-options) · [🛰️ プロキシ](#️-behind-a-proxy) · [🐞 問題](#-issues)
@@ -210,6 +211,17 @@ node src/connect-9router.js
 
 運用者のパネルは同じキーをネイティブの `mistral` プロバイダ接続として運び (**111** 登録済み)、ルーティングされた呼び出しは無料プランが提供するものに着地する: `POST /v1/chat/completions mistral/codestral-latest` → **200**、一方 `mistral/mistral-medium-latest` → **503** `[429] rate_limited` — プランの上限が、1 ホップ先に見える。
 
+## 🔌 OmniRoute に接続する
+
+[OmniRoute](https://omniroute.online) はセルフホストの OpenAI 互換ルーターだ。1 つのコマンドで `keys.txt` を動作するコンボを持つプロバイダノードに変える:
+
+```bash
+node src/connect-omniroute.js
+```
+
+デフォルト: `--base http://localhost:20128`、`--password 123456`、`--name "Mistral"`、`--prefix mistral`、`--base-url https://api.mistral.ai/v1`。
+
+運用者のパネルは同じキーをネイティブの `mistral` プロバイダ接続として運び (**111** 登録済み)、ルーティングされた呼び出しは無料プランが提供するものに着地する: `POST /v1/chat/completions mistral/codestral-latest` → **200**、一方 `mistral/mistral-medium-latest` → **503** `[429] rate_limited` — プランの上限が、1 ホップ先に見える。
 ## 🔑 1 つのキーで得られるもの
 
 | | |

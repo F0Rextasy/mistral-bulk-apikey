@@ -19,6 +19,7 @@
 [![License](https://img.shields.io/badge/license-MIT-6ea8fe?style=for-the-badge)](LICENSE)
 [![Models](https://img.shields.io/badge/models-45%20served-412991?style=for-the-badge)](https://docs.mistral.ai/getting-started/models/models_overview/)
 [![9Router](https://img.shields.io/badge/9Router-connector-8B5CF6?style=for-the-badge)](#-connect-to-9router)
+[![OmniRoute](https://img.shields.io/badge/OmniRoute-connector-8B5CF6?style=for-the-badge)](#-connect-to-omniroute)
 [![X](https://img.shields.io/badge/X-%40bigbullapp-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/bigbullapp)
 
 [🛠 快速开始](#-quick-start) · [🎁 免费额度](#-free-tier--how-much-you-get) · [🤖 模型](#-models--all-45-of-them) · [🧪 使用 API](#-how-to-use-the-api) · [✅ 已验证](#-verified-working--every-key-is-tested) · [🧭 工作原理](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [⚙️ 选项](#️-cli-options) · [🛰️ 代理](#️-behind-a-proxy) · [🐞 问题反馈](#-issues)
@@ -210,6 +211,17 @@ node src/connect-9router.js
 
 运营者的面板将这些密钥作为原生 `mistral` 提供商连接（已注册 **111** 个），而一次路由调用会落在免费套餐所服务的任何模型上：`POST /v1/chat/completions mistral/codestral-latest` → **200**，而 `mistral/mistral-medium-latest` → **503** `[429] rate_limited` —— 套餐的上限，在一跳之外即可见。
 
+## 🔌 连接到 OmniRoute
+
+[OmniRoute](https://omniroute.online) 是一个自托管、兼容 OpenAI 的路由器。一条命令即可将 `keys.txt` 变成一个带有可用组合的提供商节点：
+
+```bash
+node src/connect-omniroute.js
+```
+
+默认值：`--base http://localhost:20128`、`--password 123456`、`--name "Mistral"`、`--prefix mistral`、`--base-url https://api.mistral.ai/v1`。
+
+运营者的面板将这些密钥作为原生 `mistral` 提供商连接（已注册 **111** 个），而一次路由调用会落在免费套餐所服务的任何模型上：`POST /v1/chat/completions mistral/codestral-latest` → **200**，而 `mistral/mistral-medium-latest` → **503** `[429] rate_limited` —— 套餐的上限，在一跳之外即可见。
 ## 🔑 一个密钥能给你什么
 
 | | |

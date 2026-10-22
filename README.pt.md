@@ -19,6 +19,7 @@
 [![License](https://img.shields.io/badge/license-MIT-6ea8fe?style=for-the-badge)](LICENSE)
 [![Models](https://img.shields.io/badge/models-45%20served-412991?style=for-the-badge)](https://docs.mistral.ai/getting-started/models/models_overview/)
 [![9Router](https://img.shields.io/badge/9Router-connector-8B5CF6?style=for-the-badge)](#-connect-to-9router)
+[![OmniRoute](https://img.shields.io/badge/OmniRoute-connector-8B5CF6?style=for-the-badge)](#-connect-to-omniroute)
 [![X](https://img.shields.io/badge/X-%40bigbullapp-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/bigbullapp)
 
 [🛠 Início rápido](#-quick-start) · [🎁 Nível gratuito](#-free-tier--how-much-you-get) · [🤖 Modelos](#-models--all-45-of-them) · [🧪 Use a API](#-how-to-use-the-api) · [✅ Verificado](#-verified-working--every-key-is-tested) · [🧭 Como funciona](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [⚙️ Opções](#️-cli-options) · [🛰️ Proxies](#️-behind-a-proxy) · [🐞 Problemas](#-issues)
@@ -210,6 +211,17 @@ Padrões: `--base http://localhost:20128`, `--password 123456`, `--name "Mistral
 
 O painel do operador carrega as mesmas chaves como conexões nativas do provedor `mistral` (**111** registradas), e uma chamada roteada cai no que o plano gratuito servir: `POST /v1/chat/completions mistral/codestral-latest` → **200**, enquanto `mistral/mistral-medium-latest` → **503** `[429] rate_limited` — o teto do plano, visível a um salto de distância.
 
+## 🔌 Conectar ao OmniRoute
+
+[OmniRoute](https://omniroute.online) é um roteador auto-hospedado e compatível com OpenAI. Um comando transforma `keys.txt` em um nó de provedor com combos funcionais:
+
+```bash
+node src/connect-omniroute.js
+```
+
+Padrões: `--base http://localhost:20128`, `--password 123456`, `--name "Mistral"`, `--prefix mistral`, `--base-url https://api.mistral.ai/v1`.
+
+O painel do operador carrega as mesmas chaves como conexões nativas do provedor `mistral` (**111** registradas), e uma chamada roteada cai no que o plano gratuito servir: `POST /v1/chat/completions mistral/codestral-latest` → **200**, enquanto `mistral/mistral-medium-latest` → **503** `[429] rate_limited` — o teto do plano, visível a um salto de distância.
 ## 🔑 O que uma chave te dá
 
 | | |

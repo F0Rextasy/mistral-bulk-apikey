@@ -19,6 +19,7 @@
 [![License](https://img.shields.io/badge/license-MIT-6ea8fe?style=for-the-badge)](LICENSE)
 [![Models](https://img.shields.io/badge/models-45%20served-412991?style=for-the-badge)](https://docs.mistral.ai/getting-started/models/models_overview/)
 [![9Router](https://img.shields.io/badge/9Router-connector-8B5CF6?style=for-the-badge)](#-connect-to-9router)
+[![OmniRoute](https://img.shields.io/badge/OmniRoute-connector-8B5CF6?style=for-the-badge)](#-connect-to-omniroute)
 [![X](https://img.shields.io/badge/X-%40bigbullapp-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/bigbullapp)
 
 [🛠 Hızlı başlangıç](#-quick-start) · [🎁 Ücretsiz katman](#-free-tier--how-much-you-get) · [🤖 Modeller](#-models--all-45-of-them) · [🧪 API'yi kullanın](#-how-to-use-the-api) · [✅ Doğrulandı](#-verified-working--every-key-is-tested) · [🧭 Nasıl çalışır](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [⚙️ Seçenekler](#️-cli-options) · [🛰️ Proxy'ler](#️-behind-a-proxy) · [🐞 Sorunlar](#-issues)
@@ -210,6 +211,17 @@ Varsayılanlar: `--base http://localhost:20128`, `--password 123456`, `--name "M
 
 Operatörün paneli aynı anahtarları yerel `mistral` sağlayıcı bağlantıları olarak taşır (**111** kayıtlı) ve yönlendirilmiş bir çağrı, ücretsiz planın sunduğu her neyse ona iner: `POST /v1/chat/completions mistral/codestral-latest` → **200**, oysa `mistral/mistral-medium-latest` → **503** `[429] rate_limited` — planın tavanı, bir atlama ötede görünür.
 
+## 🔌 OmniRoute'a bağlanın
+
+[OmniRoute](https://omniroute.online) kendi kendine barındırılan, OpenAI uyumlu bir yönlendiricidir. Tek bir komut `keys.txt` dosyasını çalışan kombinasyonlara sahip bir sağlayıcı düğümüne dönüştürür:
+
+```bash
+node src/connect-omniroute.js
+```
+
+Varsayılanlar: `--base http://localhost:20128`, `--password 123456`, `--name "Mistral"`, `--prefix mistral`, `--base-url https://api.mistral.ai/v1`.
+
+Operatörün paneli aynı anahtarları yerel `mistral` sağlayıcı bağlantıları olarak taşır (**111** kayıtlı) ve yönlendirilmiş bir çağrı, ücretsiz planın sunduğu her neyse ona iner: `POST /v1/chat/completions mistral/codestral-latest` → **200**, oysa `mistral/mistral-medium-latest` → **503** `[429] rate_limited` — planın tavanı, bir atlama ötede görünür.
 ## 🔑 Bir anahtar size ne kazandırır
 
 | | |

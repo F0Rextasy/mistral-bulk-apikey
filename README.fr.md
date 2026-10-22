@@ -19,6 +19,7 @@
 [![License](https://img.shields.io/badge/license-MIT-6ea8fe?style=for-the-badge)](LICENSE)
 [![Models](https://img.shields.io/badge/models-45%20served-412991?style=for-the-badge)](https://docs.mistral.ai/getting-started/models/models_overview/)
 [![9Router](https://img.shields.io/badge/9Router-connector-8B5CF6?style=for-the-badge)](#-connect-to-9router)
+[![OmniRoute](https://img.shields.io/badge/OmniRoute-connector-8B5CF6?style=for-the-badge)](#-connect-to-omniroute)
 [![X](https://img.shields.io/badge/X-%40bigbullapp-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/bigbullapp)
 
 [🛠 Démarrage rapide](#-quick-start) · [🎁 Offre gratuite](#-free-tier--how-much-you-get) · [🤖 Modèles](#-models--all-45-of-them) · [🧪 Utiliser l'API](#-how-to-use-the-api) · [✅ Vérifié](#-verified-working--every-key-is-tested) · [🧭 Comment ça marche](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [⚙️ Options](#️-cli-options) · [🛰️ Proxies](#️-behind-a-proxy) · [🐞 Problèmes](#-issues)
@@ -210,6 +211,17 @@ Défauts : `--base http://localhost:20128`, `--password 123456`, `--name "Mistra
 
 Le panneau de l'opérateur porte les mêmes clés que les connexions natives au fournisseur `mistral` (**111** enregistrées), et un appel routé atterrit sur ce que sert le plan gratuit : `POST /v1/chat/completions mistral/codestral-latest` → **200**, tandis que `mistral/mistral-medium-latest` → **503** `[429] rate_limited` — le plafond du plan, visible à un saut de distance.
 
+## 🔌 Se connecter à OmniRoute
+
+[OmniRoute](https://omniroute.online) est un routeur auto-hébergé, compatible OpenAI. Une seule commande transforme `keys.txt` en un nœud fournisseur avec des combos fonctionnels :
+
+```bash
+node src/connect-omniroute.js
+```
+
+Défauts : `--base http://localhost:20128`, `--password 123456`, `--name "Mistral"`, `--prefix mistral`, `--base-url https://api.mistral.ai/v1`.
+
+Le panneau de l'opérateur porte les mêmes clés que les connexions natives au fournisseur `mistral` (**111** enregistrées), et un appel routé atterrit sur ce que sert le plan gratuit : `POST /v1/chat/completions mistral/codestral-latest` → **200**, tandis que `mistral/mistral-medium-latest` → **503** `[429] rate_limited` — le plafond du plan, visible à un saut de distance.
 ## 🔑 Ce qu'une clé vous donne
 
 | | |

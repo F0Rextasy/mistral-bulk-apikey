@@ -19,6 +19,7 @@
 [![License](https://img.shields.io/badge/license-MIT-6ea8fe?style=for-the-badge)](LICENSE)
 [![Models](https://img.shields.io/badge/models-45%20served-412991?style=for-the-badge)](https://docs.mistral.ai/getting-started/models/models_overview/)
 [![9Router](https://img.shields.io/badge/9Router-connector-8B5CF6?style=for-the-badge)](#-connect-to-9router)
+[![OmniRoute](https://img.shields.io/badge/OmniRoute-connector-8B5CF6?style=for-the-badge)](#-connect-to-omniroute)
 [![X](https://img.shields.io/badge/X-%40bigbullapp-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/bigbullapp)
 
 [🛠 Schnellstart](#-quick-start) · [🎁 Kostenloser Tarif](#-free-tier--how-much-you-get) · [🤖 Modelle](#-models--all-45-of-them) · [🧪 Die API verwenden](#-how-to-use-the-api) · [✅ Verifiziert](#-verified-working--every-key-is-tested) · [🧭 So funktioniert es](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [⚙️ Optionen](#️-cli-options) · [🛰️ Proxys](#️-behind-a-proxy) · [🐞 Probleme](#-issues)
@@ -210,6 +211,17 @@ Standardwerte: `--base http://localhost:20128`, `--password 123456`, `--name "Mi
 
 Das Panel des Betreibers trägt dieselben Schlüssel als native `mistral`-Provider-Verbindungen (**111** registriert), und ein gerouteter Aufruf landet auf dem, was der kostenlose Tarif bedient: `POST /v1/chat/completions mistral/codestral-latest` → **200**, während `mistral/mistral-medium-latest` → **503** `[429] rate_limited` — die Obergrenze des Tarifs, einen Hop entfernt sichtbar.
 
+## 🔌 Mit OmniRoute verbinden
+
+[OmniRoute](https://omniroute.online) ist ein selbst gehosteter, OpenAI-kompatibler Router. Ein Befehl verwandelt `keys.txt` in einen Provider-Node mit funktionierenden Kombos:
+
+```bash
+node src/connect-omniroute.js
+```
+
+Standardwerte: `--base http://localhost:20128`, `--password 123456`, `--name "Mistral"`, `--prefix mistral`, `--base-url https://api.mistral.ai/v1`.
+
+Das Panel des Betreibers trägt dieselben Schlüssel als native `mistral`-Provider-Verbindungen (**111** registriert), und ein gerouteter Aufruf landet auf dem, was der kostenlose Tarif bedient: `POST /v1/chat/completions mistral/codestral-latest` → **200**, während `mistral/mistral-medium-latest` → **503** `[429] rate_limited` — die Obergrenze des Tarifs, einen Hop entfernt sichtbar.
 ## 🔑 Was ein Schlüssel dir bringt
 
 | | |

@@ -19,6 +19,7 @@
 [![License](https://img.shields.io/badge/license-MIT-6ea8fe?style=for-the-badge)](LICENSE)
 [![Models](https://img.shields.io/badge/models-45%20served-412991?style=for-the-badge)](https://docs.mistral.ai/getting-started/models/models_overview/)
 [![9Router](https://img.shields.io/badge/9Router-connector-8B5CF6?style=for-the-badge)](#-connect-to-9router)
+[![OmniRoute](https://img.shields.io/badge/OmniRoute-connector-8B5CF6?style=for-the-badge)](#-connect-to-omniroute)
 [![X](https://img.shields.io/badge/X-%40bigbullapp-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/bigbullapp)
 
 [🛠 Быстрый старт](#-quick-start) · [🎁 Бесплатный тариф](#-free-tier--how-much-you-get) · [🤖 Модели](#-models--all-45-of-them) · [🧪 Использование API](#-how-to-use-the-api) · [✅ Проверено](#-verified-working--every-key-is-tested) · [🧭 Как это работает](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [⚙️ Опции](#️-cli-options) · [🛰️ Прокси](#️-behind-a-proxy) · [🐞 Проблемы](#-issues)
@@ -210,6 +211,17 @@ node src/connect-9router.js
 
 Панель оператора несёт те же ключи как нативные подключения провайдера `mistral` (**111** зарегистрировано), а маршрутизированный вызов попадает на то, что обслуживает бесплатный тариф: `POST /v1/chat/completions mistral/codestral-latest` → **200**, тогда как `mistral/mistral-medium-latest` → **503** `[429] rate_limited` — потолок тарифа, видимый на расстоянии одного перехода.
 
+## 🔌 Подключение к OmniRoute
+
+[OmniRoute](https://omniroute.online) — это самостоятельно размещаемый маршрутизатор, совместимый с OpenAI. Одна команда превращает `keys.txt` в узел-провайдер с рабочими комбинациями:
+
+```bash
+node src/connect-omniroute.js
+```
+
+По умолчанию: `--base http://localhost:20128`, `--password 123456`, `--name "Mistral"`, `--prefix mistral`, `--base-url https://api.mistral.ai/v1`.
+
+Панель оператора несёт те же ключи как нативные подключения провайдера `mistral` (**111** зарегистрировано), а маршрутизированный вызов попадает на то, что обслуживает бесплатный тариф: `POST /v1/chat/completions mistral/codestral-latest` → **200**, тогда как `mistral/mistral-medium-latest` → **503** `[429] rate_limited` — потолок тарифа, видимый на расстоянии одного перехода.
 ## 🔑 Что даёт один ключ
 
 | | |

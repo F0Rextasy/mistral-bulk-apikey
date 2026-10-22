@@ -122,6 +122,11 @@ The launcher asks for the proxy list, the account count and the gate model, reme
 
 ## ✅ Verified working — every key is tested
 
+> **Quality gates.** Every key here passed a live `chat-200` before it was written to `keys.txt`
+> (dead keys are never shipped). Router combos follow the same rule at the model level: an entry is
+> added **only if the model answers `chat-200` and can call tools** — a model without tool support,
+> a dead key or a dead provider is dropped instead of added. Works with **9Router and OmniRoute**.
+
 | Check | Result |
 | --- | --- |
 | `GET /self-service/registration/api` | **200** — flow id + `csrf_token`; fields seen: `traits.email`, `password`, `traits.name.first`, `traits.name.last`, `method` |
@@ -213,7 +218,6 @@ node src/connect-9router.js
 Defaults: `--base http://localhost:20128`, `--password 123456`, `--name "Mistral"`, `--prefix mistral`, `--base-url https://api.mistral.ai/v1`.
 
 The operator's panel carries the same keys as native `mistral` provider connections (**111** registered), and a routed call lands on whatever the free plan serves: `POST /v1/chat/completions mistral/codestral-latest` → **200**, while `mistral/mistral-medium-latest` → **503** `[429] rate_limited` — the plan's ceiling, visible one hop away.
-
 
 ## 🔌 Connect to OmniRoute
 
