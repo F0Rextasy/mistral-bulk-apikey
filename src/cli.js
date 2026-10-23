@@ -59,6 +59,20 @@ const KEYS_FILE = path.join(ROOT, 'keys.txt');
 const UNGATED_FILE = path.join(ROOT, 'keys-ungated.txt');
 const ACCOUNTS_FILE = path.join(ROOT, 'accounts.json');
 
+/** Dead-key report: only definite rejections — 429/5xx/transport never land here. */
+const DEAD_FILE = path.join(ROOT, 'keys-dead.txt');
+const DEAD_STATUS = new Set([401, 403]);
+const DEAD_REASON = /banned|deactivated|disabled|suspended|quota|insufficient|forbidden|unauthorized/i;
+function recordDead(key, status, sample) {
+  if (!key) return;
+  if (!DEAD_STATUS.has(Number(status)) && !DEAD_REASON.test(String(sample || ''))) return;
+  const why = `${status}${sample ? ' ' + String(sample).replace(/\s+/g, ' ').slice(0, 60) : ''}`;
+  try {
+    fs.mkdirSync(path.dirname(DEAD_FILE), { recursive: true });
+    fs.appendFileSync(DEAD_FILE, `${key}\t${why}\t${new Date().toISOString()}\n`);
+  } catch (e) { /* diagnostics must never break the run */ }
+}
+
 const AUTH = 'https://auth.mistral.ai';
 const CONSOLE = 'https://console.mistral.ai';
 const API = 'https://api.mistral.ai';
@@ -416,6 +430,7 @@ async function mintAccount(px, index) {
     if (gate.ok) {
       return { address, password, person, key, keyId: (kr.json && kr.json.key_id) || '', workspace: wid, model, gate, verified };
     }
+    recordDead(key, gate.status, gate.error);
     last = { status: gate.status, error: `${model}: ${gate.error}` };
   }
   return { address, password, person, key, keyId: (kr.json && kr.json.key_id) || '', workspace: wid, model: '', gate: last, verified };
@@ -552,6 +567,7 @@ async function verifyOnly(exits) {
   for (let i = 0; i < keys.length; i++) {
     let ok = false;
     let note = '';
+    let status = 0;
     // A key is only ever marked dead by an *answer*. A transport failure is the
     // exit's problem, so the key moves to the next exit in the pool instead of
     // being written off — a dead free exit would otherwise look like a dead key.
@@ -567,6 +583,7 @@ async function verifyOnly(exits) {
             note = `${model} ${g.status} ${g.model} ${g.text}`;
             break;
           }
+          status = g.status;
           note = `${model} HTTP ${g.status} ${g.error}`;
         } catch (e) {
           exitFailed = true;
@@ -576,6 +593,7 @@ async function verifyOnly(exits) {
       }
       if (!ok && !exitFailed) break; // the plan answered: the key itself is not live
     }
+    if (!ok) recordDead(keys[i], status, note);
     (ok ? live : dead).push(keys[i]);
     say(`  ${ok ? '✓' : '✗'} ${keys[i].slice(0, 12)}… ${note}`);
   }
