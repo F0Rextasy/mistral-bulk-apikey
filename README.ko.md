@@ -1,7 +1,6 @@
 <div align="center">
 
 ```
-
 ███╗   ███╗██╗███████╗████████╗██████╗  █████╗ ██╗
 ████╗ ████║██║██╔════╝╚══██╔══╝██╔══██╗██╔══██╗██║
 ██╔████╔██║██║███████╗   ██║   ██████╔╝███████║██║
@@ -22,7 +21,7 @@
 [![OmniRoute](https://img.shields.io/badge/OmniRoute-connector-8B5CF6?style=for-the-badge)](#-connect-to-omniroute)
 [![X](https://img.shields.io/badge/X-%40bigbullapp-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/bigbullapp)
 
-[🛠 빠른 시작](#-quick-start) · [🎁 무료 티어](#-free-tier--how-much-you-get) · [🤖 모델](#-models--all-45-of-them) · [🧪 API 사용하기](#-how-to-use-the-api) · [✅ 검증됨](#-verified-working--every-key-is-tested) · [🧭 작동 방식](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [⚙️ 옵션](#️-cli-options) · [🛰️ 프록시](#️-behind-a-proxy) · [🐞 이슈](#-issues)
+[🛠 빠른 시작](#-quick-start) · [🎁 무료 티어](#-free-tier--how-much-you-get) · [🤖 모델](#-models--all-45-of-them) · [🧪 API 사용하기](#-how-to-use-the-api) · [✅ 검증됨](#-verified-working--every-key-is-tested) · [🧭 작동 방식](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [🔌 OmniRoute](#-connect-to-omniroute) · [⚙️ 옵션](#️-cli-options) · [🛰️ 프록시](#️-behind-a-proxy) · [🐞 이슈](#-issues)
 
 </div>
 
@@ -36,48 +35,48 @@
 
 ## ✨ 왜 이게 필요한가
 
-Mistral의 문은 **Ory Kratos** 방식입니다: `POST /self-service/registration`은 이메일, 비밀번호, 이름만 받고 그 외에는 아무것도 받지 않습니다 — **카드도, 전화도, 캡차도 없습니다** — 그리고 받은편지함 단계는 코드와 flow id를 함께 담은 링크이므로, 전체 레일이 계정당 하나의 메일함 별칭으로 평범한 HTTP 위에서 돌아갑니다. 세션이 생기면 콘솔 자체의 결제 라우트가 키를 발급합니다: `POST /api/billing/api-keys {name, workspace, primitive_access_scope:"shared_only"}` → `mstrl_…` (45자).
+Mistral의 관문은 **Ory Kratos** 방식입니다: `POST /self-service/registration`은 이메일, 비밀번호, 이름만 받고 그 외에는 아무것도 요구하지 않습니다 — **카드도, 전화번호도, 캡차도 없습니다** — 그리고 받은편지함 단계는 코드 *와* flow id를 함께 담은 링크이므로, 전체 흐름이 계정당 하나의 메일함 별칭으로 평범한 HTTP 위에서 돌아갑니다. 세션이 생기면 콘솔 자체의 결제 라우트가 키를 발급합니다: `POST /api/billing/api-keys {name, workspace, primitive_access_scope:"shared_only"}` → `mstrl_…` (45자).
 
-확장되는 단위는 **하나의 계정 = 하나의 키**입니다. 운영자의 플릿에서 측정한 결과(2026-10-19): 레일은 2개의 워커로 8개씩 12개의 청크로 **111개의 키**를 **키당 약 14.6초**로 밀어냈고, 2개의 계정을 잃었습니다(하나는 180초 안에 배달되지 않은 받은편지함, 하나는 `login 400`) — CAPTCHA 장벽도, 속도 제한 장벽도 없었습니다. **111개** 모두 `mistral-tiny-latest` **와** `codestral-latest`에서 chat-200을 응답했습니다 — **222/222** 라이브 호출. 이 저장소가 검증되는 동안, 자체 CLI가 같은 형태의 키를 **3개 더** 발급했습니다(`--conc 2`에서 56초에 2개, 26초에 1개), 각각 기록되기 전에 chat-200을 응답했습니다. 증식되는 것은 무료 **Experiment** api_plan이며, 이것이 더 큰 id들이 게이트에서 제외되는 이유입니다(아래 참조).
+확장되는 단위는 **하나의 계정 = 하나의 키**입니다. 운영자의 플릿에서 측정한 결과(2026-10-19): 이 레일은 2개의 워커로 8개씩 12개 청크로 모든 키를 **키당 약 14.6초**에 밀어냈고, 2개의 계정을 잃었습니다(180초 안에 전달되지 않은 받은편지함 하나, `login 400` 하나) — CAPTCHA 장벽도, 속도 제한 장벽도 없었습니다. **111**개 전부가 `mistral-tiny-latest` **와** `codestral-latest`에서 chat-200으로 응답했습니다 — **222/222** 라이브 호출. 이 저장소가 검증되는 동안, 자체 CLI가 같은 형태의 키를 **3개 더** 발급했습니다(`--conc 2`에서 56초에 2개, 26초에 1개), 각각 기록되기 전에 chat-200을 통과했습니다. 증식되는 것은 무료 **Experiment** api_plan이며, 이것이 더 큰 id들이 게이트에서 제외되는 이유입니다(아래 참조).
 
 ## 🎁 무료 티어 — 얼마나 받을 수 있나
 
-**모든 새 계정은 무료 키를 받습니다** — 카드도, 캡차도, 전화도 없습니다.
+**모든 새 계정은 무료 키를 받습니다** — 카드도, 캡차도, 전화번호도 없습니다.
 
 | 항목 | 값 |
 | --- | --- |
 | 카드 필요 | **아니오** |
-| 전화 | **요구되지 않음** — 콘솔은 실제로 `/api/users/verify-phone/send-code` 라우트를 제공하지만, 새 무료 계정에서는 `400 can't be verified`를 응답하며 채팅 게이트는 결코 이것을 필요로 하지 않습니다 |
-| 캡차 / Turnstile | 여기서 사용되는 Kratos API 흐름에서는 **없음** |
+| 전화번호 | **요구되지 않음** — 콘솔에는 `/api/users/verify-phone/send-code` 라우트가 있긴 하지만, 새 무료 계정에서는 `400 can't be verified`로 응답하며 채팅 게이트는 이를 전혀 필요로 하지 않습니다 |
+| 캡차 / Turnstile | 여기서 사용하는 Kratos API 흐름에는 **없음** |
 | 메일함 | **필수** — 계정당 하나의 별칭; `temp.tf` outlook/hotmail 플러스 별칭은 Mistral이 허용하는 도메인으로 도착합니다 |
 | 플랜 | 무료 **Experiment** api_plan |
 | 가입 크레딧 | 쓸 것이 없음 — 무료 플랜 자체가 게이트의 id들을 제공합니다 |
-| 모델 상한 | 더 큰 id들은 완벽하게 좋은 키로도 `429 rate_limited`를 응답하므로 게이트에 포함되지 않습니다 |
+| 모델 상한 | 더 큰 id들은 완벽하게 유효한 키로도 `429 rate_limited`로 응답하므로 게이트에 포함되지 않습니다 |
 | 확장되는 단위 | **하나의 계정 = 하나의 키** → `--count N`은 "N개의 무료 계정" |
 
-> 💡 무료 티어는 Mistral AI가 설정하며 변경될 수 있습니다. 실시간 수치는 [mistral.ai](https://mistral.ai)에서 확인하세요 — 그리고 도구 자체의 게이트가 결정하게 하세요:
+> 💡 무료 티어는 Mistral AI가 정하며 변경될 수 있습니다. 실시간 수치는 [mistral.ai](https://mistral.ai)에서 확인하세요 — 그리고 도구 자체의 게이트가 판단하게 하세요:
 
 ```bash
-node src/cli.js --verify-only     # every key in keys.txt is re-tested with a real chat call
+node src/cli.js --verify-only     # keys.txt의 모든 키가 실제 채팅 호출로 재검증됩니다
 ```
 
 ## 🤖 모델 — 45개 전부
 
-하나의 무료 키는 **45개의 모델 id**를 봅니다(`GET /v1/models`, 2026-10-19 측정) — 채팅, 임베드, OCR, 오디오가 같은 목록에 있습니다. 채팅이 가능한 모든 id에 실제 완성을 요청하면(24개 id, 한 번의 스윕, 같은 키) 그 목록이 셋으로 나뉩니다:
+하나의 무료 키는 **45개의 모델 id**를 봅니다(`GET /v1/models`, 2026-10-19 측정) — 채팅, 임베드, OCR, 오디오가 같은 목록에 있습니다. 채팅이 가능한 모든 id에 실제 완성을 요청하면(24개 id, 한 번의 스윕, 동일한 키) 그 목록이 셋으로 나뉩니다:
 
-* **9개 id가 200을 응답** — `codestral-2508`, `codestral-latest`, `mistral-code-latest`, `ministral-14b-2512`, `ministral-14b-latest`, `ministral-3b-2512`, `ministral-3b-latest`, `ministral-8b-2512`, `ministral-8b-latest`;
-* **13개 id가 429 `rate_limited`를 응답** — `mistral-medium*`, `mistral-small*`, `magistral-*`, `mistral-vibe-cli-*` 절반 전체;
-* **2개 id가 403을 응답** — `labs-leanstral-1-5`와 `labs-leanstral-1-5-1`.
+* **9개 id가 200으로 응답** — `codestral-2508`, `codestral-latest`, `mistral-code-latest`, `ministral-14b-2512`, `ministral-14b-latest`, `ministral-3b-2512`, `ministral-3b-latest`, `ministral-8b-2512`, `ministral-8b-latest`;
+* **13개 id가 429 `rate_limited`로 응답** — `mistral-medium*`, `mistral-small*`, `magistral-*`, `mistral-vibe-cli-*` 절반 전체;
+* **2개 id가 403으로 응답** — `labs-leanstral-1-5`와 `labs-leanstral-1-5-1`.
 
-여기에는 키가 실제로 응답한 적이 있는 id만 나열됩니다:
+여기에는 키가 실제로 응답을 받은 id만 나열됩니다:
 
 | 모델 ID | ✓ | 비고 |
 | --- | --- | --- |
-| `mistral-tiny-latest` | ✓ | 게이트의 첫 번째 정류장; `ministral-8b-2512`로 응답 — 더 새로운 카탈로그 목록이 더 이상 이름을 붙이지 않는 레거시 별칭 |
-| `open-mistral-nemo` | ✓ | 45개 id 목록에 없지만 여전히 제공됨 |
+| `mistral-tiny-latest` | ✓ | 게이트의 첫 정거장; `ministral-8b-2512`로 응답 — 최신 카탈로그 목록에는 더 이상 이름이 없는 레거시 별칭 |
+| `open-mistral-nemo` | ✓ | 45개 id 목록에는 없지만 여전히 제공됨 |
 | `codestral-latest` | ✓ | 코드 모델; 두 번째 핀, 위의 222회 호출 스윕에 사용됨 |
 
-게이트는 이 셋을 순서대로 순회하며 첫 200에서 멈추므로, 계정이 실제로 이들 중 하나를 제공할 때만 키가 보관됩니다. 429는 죽은 키가 아니라 속도 신호로 취급됩니다(2.5초 후 한 번 재시도).
+게이트는 이 셋을 순서대로 순회하며 첫 200에서 멈추므로, 계정이 실제로 이 중 하나를 제공할 때만 키가 보존됩니다. 429는 죽은 키가 아니라 속도 신호로 취급됩니다(2.5초 후 한 번 재시도).
 
 ## 🧪 API 사용 방법
 
@@ -90,7 +89,7 @@ curl https://api.mistral.ai/v1/chat/completions \
   -d '{"model":"codestral-latest","messages":[{"role":"user","content":"hi"}],"max_tokens":16}'
 ```
 
-무료 플랜 키는 작은 id들에서 응답하고 `mistral-medium*` / `mistral-small*`에 대해 `429 rate_limited`를 반환합니다 — 그것은 키가 아니라 플랜입니다.
+무료 플랜 키는 작은 id들에서는 응답하고 `mistral-medium*` / `mistral-small*`에 대해서는 `429 rate_limited`를 반환합니다 — 이는 키가 아니라 플랜의 문제입니다.
 
 ## 🛠 빠른 시작
 
@@ -99,29 +98,28 @@ curl https://api.mistral.ai/v1/chat/completions \
 # clone or fork this repository, then:
 cd mistral-bulk-apikey
 
-# 1) your proxy list, one per line (http://… or socks5://…)
-printf 'http://127.0.0.1:8080\n' > proxies.txt
+# 1) your proxy list, one per line (http://… or socks5://…) — optional, see below
+printf 'http://127.0.0.1:8080\n' > proxies.txt   # optional — without it the tool runs direct
 
 # 2) go
 node src/launcher.js                # interactive
-
 # or directly:
 node src/cli.js --count 50 --conc 2
 ```
 
-`keys.txt`는 라이브 채팅 완성이 키를 증명한 **후에만** 기록됩니다.
+`keys.txt`는 실제 채팅 완성이 키를 증명한 **후에만** 기록됩니다.
 
 | 모드 | 하는 일 |
 | --- | --- |
-| `run` (기본) | `--count`까지 계정을 발급하고, 모든 키를 라이브 채팅으로 게이트 |
-| `--verify-only` | `keys.txt`를 다시 스윕하고, 실패한 것은 `keys-ungated.txt`로 이동 |
+| `run` (기본) | `--count`까지 계정을 발급하고, 실제 채팅으로 모든 키를 게이트 |
+| `--verify-only` | `keys.txt`를 재스윕하여 실패한 항목을 `keys-ungated.txt`로 이동 |
 | `--screen` | 프록시 목록을 Mistral에 대해 테스트 → `proxies.live.txt` |
 | `--probe` | 환경 점검: 종료, 받은편지함 레일, 등록 흐름 필드, 게이트 순서, 기존 키 |
 | `--collect` | `accounts.json`에서 `keys.txt`를 재구성 |
 
 ### 🖱️ 런처
 
-런처는 프록시 목록, 계정 수, 게이트 모델을 묻고, 이를 `launcher.config.json`에 기억한 뒤 올바른 플래그로 CLI를 실행합니다. 또한 종료 목록을 스크리닝하고 `keys.txt`를 로컬 9Router에 등록할 수 있습니다.
+런처는 프록시 목록, 계정 수, 게이트 모델을 묻고 이를 `launcher.config.json`에 기억한 뒤 올바른 플래그로 CLI를 실행합니다. 또한 종료 목록을 스크리닝하고 로컬 9Router에 `keys.txt`를 등록할 수 있습니다.
 
 ## ✅ 검증됨 — 모든 키가 테스트됨
 
@@ -129,19 +127,25 @@ node src/cli.js --count 50 --conc 2
 | --- | --- |
 | `GET /self-service/registration/api` | **200** — flow id + `csrf_token`; 확인된 필드: `traits.email`, `password`, `traits.name.first`, `traits.name.last`, `method` |
 | `POST /self-service/registration?flow=…` | **200** — 계정 생성됨, 본문에 `session_token` |
-| 받은편지함 링크 `?code=…&flow=…` → `GET /self-service/verification/flows?id=…` → `POST /self-service/verification?flow=…` | **200** — 검증됨(`410` = 이미 검증됨, 역시 허용됨) |
+| 받은편지함 링크 `?code=…&flow=…` → `GET /self-service/verification/flows?id=…` → `POST /self-service/verification?flow=…` | **200** — 검증됨(`410` = 이미 검증됨, 역시 허용) |
 | `GET /api/workspaces` | **200** — 워크스페이스 uuid |
 | `POST /api/billing/api-keys` | **200** — `mstrl_…`, 45자, 카드 없음 |
 | `POST https://api.mistral.ai/v1/chat/completions` — 기록되기 전 **모든** 키에 대해 실행 | 실제 콘텐츠와 함께 **200** |
 | 전체 플릿 스윕 | **111/111** 키가 `mistral-tiny-latest` **와** `codestral-latest`에서 chat-200 (222/222 호출, 2026-10-19) |
-| 이 저장소의 CLI, 검증 중 라이브 발급 | **3개 키** 발급 및 chat-200 (`--count 3` → `--conc 2`에서 56초에 2개; `--count 1` → 26초에 1개). 첫 배치의 한 계정은 테스트 풀의 도달 불가능한 두 종료로 인해 잃었고 그대로 보고됨 |
-| 채팅 점검에 실패한 키 | `keys.txt`에 결코 기록되지 않음 |
+| 이 저장소의 CLI, 검증 중 라이브 발급 | 발급된 모든 키가 chat-200 (`--count 3` → `--conc 2`에서 56초에 2개; `--count 1` → 26초에 1개). 첫 배치의 계정 하나는 테스트 풀에서 도달 불가능한 두 종료로 인해 손실되었고 그대로 보고됨 |
+| 채팅 점검에 실패한 키 | `keys.txt`에 절대 기록되지 않음 |
 
 게이트의 응답, 그대로 (배포된 CLI가 발급한 첫 키, `mistral-tiny-latest`):
 
 ```json
 {"id":"cb51dff9b36c41a08d41c8c0533885da","created":1792380045,"model":"ministral-8b-2512","usage":{"prompt_tokens":9,"total_tokens":11,"completion_tokens":2,"service_tier":"standard"},"object":"chat.completion","choices":[{"index":0,"finish_reason":"stop","message":{"role":"assistant","tool_calls":null,"content":"ok"}}]}
 ```
+
+> **품질 게이트.** 여기의 모든 키는 `keys.txt`에 기록되기 전에 라이브 `chat-200`을 통과했습니다
+> (죽은 키는 절대 배포되지 않습니다). 라우터 콤보도 모델 수준에서 같은 규칙을 따릅니다: 항목은
+> **모델이 `chat-200`으로 응답하고 도구를 호출할 수 있을 때만** 추가됩니다 — 도구 지원이 없는 모델,
+> 죽은 키, 죽은 제공자는 추가되지 않고 제거됩니다. 언제든지 검증 단계를 다시 실행하세요;
+> 실패는 보고되며 절대 숨겨지지 않습니다.
 
 ## 🧭 작동 방식
 
@@ -156,12 +160,12 @@ inbox (one Microsoft-family alias per account)                    a fresh alias 
 
 | 단계 | 호출 | 비고 |
 | --- | --- | --- |
-| 별칭 | `GET https://temp.tf/api/account?providers=outlook,hotmail&dot=0&plus=1` | 계정당 하나의 별칭; 라우트는 IP 스로틀됨(주소당 약 20초)이므로 레일은 시도를 소진하기보다 재시도함 |
-| 등록 | `GET /self-service/registration/api` → `POST /self-service/registration?flow=…` | JSON 본문 + 흐름의 `csrf_token`; 응답이 이미 `session_token`을 담고 있음 |
+| 별칭 | `GET https://temp.tf/api/account?providers=outlook,hotmail&dot=0&plus=1` | 계정당 하나의 별칭; 이 라우트는 IP 스로틀링(~주소당 20초)이 걸려 있어 레일은 시도를 태우지 않고 재시도합니다 |
+| 등록 | `GET /self-service/registration/api` → `POST /self-service/registration?flow=…` | JSON 본문 + 흐름의 `csrf_token`; 응답에 이미 `session_token`이 담겨 있음 |
 | 검증 | 받은편지함의 링크 → `GET /self-service/verification/flows?id=…` → `POST /self-service/verification?flow=…` `{method:"code", code}` | 링크 자체가 `code`와 `flow`를 모두 담고 있음 |
-| 세션 | 등록 응답의 `session_token` | Kratos는 첫 세션이 신선한 동안 두 번째 비밀번호 로그인을 거부하므로, 재로그인은 `401`에서만 발생함 |
+| 세션 | 등록 응답의 `session_token` | Kratos는 첫 세션이 신선한 동안 두 번째 비밀번호 로그인을 거부하므로, 재로그인은 `401`에서만 발생합니다 |
 | 워크스페이스 | `GET console.mistral.ai/api/workspaces` | 첫 번째 `items[].uuid` |
-| 키 | `POST console.mistral.ai/api/billing/api-keys` `{name, workspace, primitive_access_scope:"shared_only"}` | 평문 `mstrl_…`이 한 번 반환됨 |
+| 키 | `POST console.mistral.ai/api/billing/api-keys` `{name, workspace, primitive_access_scope:"shared_only"}` | 평문 `mstrl_…`가 한 번 반환됨 |
 | 게이트 | `POST api.mistral.ai/v1/chat/completions` | `keys.txt` 전에 라이브 200 필요; 429는 2.5초 후 한 번 재시도, 그다음 다음 id |
 
 ## ⚙️ CLI 옵션
@@ -172,31 +176,37 @@ node src/cli.js [mode] [flags]
 
 | 플래그 | 기본값 | 의미 |
 | --- | --- | --- |
-| `--count N` | 10 | 발급할 계정 (= 키) 수 |
-| `--conc N` | 2 | 동시 진행 계정 (최대 16) — 계정당 하나의 종료가 고정됨 |
-| `--model <id>` | `mistral-tiny-latest` | 고정된 게이트 모델; 폴백 순서가 이를 따름 |
-| `--pool <file>` | `proxies.txt` | 프록시 목록 (`MISTRAL_PROXIES` 환경 변수도 작동) |
-| `--gap MS` | 800 | 한 워커 내 계정 사이의 일시정지 |
-| `--tries N` | 2 | 계정당 시도할 종료 |
+| `--count N` | 10 | 발급할 계정(= 키) 수 |
+| `--conc N` | 2 | 동시 진행 계정 수(최대 16) — 계정당 하나의 종료가 고정됨 |
+| `--model <id>` | `mistral-tiny-latest` | 고정 게이트 모델; 대체 순서가 이를 따름 |
+| `--pool <file>` | `proxies.txt` | 선택적 프록시 목록(`MISTRAL_PROXIES` 환경 변수도 작동) |
+| `--gap MS` | 800 | 한 워커 내 계정 사이의 일시 정지 |
+| `--tries N` | 2 | 계정당 시도할 종료 수 |
 | `--timeout MS` | 45000 | 요청당 타임아웃 |
 | `--mail-timeout MS` | 180000 | 한 계정이 검증 링크를 기다리는 시간 |
 | `--mail <list>` | `outlook,hotmail` | 별칭에 사용되는 받은편지함 제공자 |
 | `--verify-only` · `--screen` · `--probe` · `--collect` | — | 위의 모드들 |
 
-실패한 종료는 다음 계정을 위해 교체되며, 풀 라인은 스크리닝된 메모(`http://host:port 1.2.3.4`)를 담을 수 있습니다 — 로더는 첫 번째 토큰을 유지합니다.
+실패한 종료는 다음 계정을 위해 교체되며, 풀 라인에는 스크리닝된 메모(`http://host:port 1.2.3.4`)가 담길 수 있습니다 — 로더는 첫 번째 토큰을 유지합니다.
 
 ## 🛰️ 프록시 뒤에서
 
-모든 요청은 풀의 종료를 통해 나갑니다 — 도구는 결코 자신의 회선에서 Mistral에 접속하지 않으며, **하나의 계정은 전체 수명 동안 하나의 종료에 삽니다**(Kratos는 세션을 생성된 IP에 묶습니다). 운영자의 플릿에서 측정: 10줄 풀이 **3개의 종료**를 `auth.mistral.ai`로 통과시켰고, 완료된 모든 계정은 시작한 단일 종료를 유지했습니다(도달 불가능한 풀 라인으로 종료를 잃은 두 개는 다음 것으로 재시도되었고 그대로 보고됨). `--screen`은 생존자를 `proxies.live.txt`에 기록하므로 다음 실행은 이미 응답한 종료에서 시작합니다.
+**선택 사항 — 대규모에서는 권장(IP당 제한, 차단).** 이 도구는 프록시 없이도 작동합니다.
+
+- **풀이 있을 때:** `--pool <file>`을 전달하거나(또는 `MISTRAL_PROXIES` 설정) 모든 요청이 그 목록의 종료를 통해 나갑니다 — 하나의 계정은 전체 수명 동안 하나의 종료에 머무릅니다(Kratos는 세션을 생성된 IP에 묶습니다).
+- **풀이 없을 때:** CLI는 `running WITHOUT a proxy (direct)`를 출력하고 직접 연결합니다; 별칭, 검증 링크, 워크스페이스 키, 채팅 게이트 모두 같은 방식으로 작동합니다.
+- `--screen`은 살아남은 것들을 `proxies.live.txt`에 기록하여 다음 실행이 이미 응답한 종료에서 시작하게 합니다 — 또는 풀이 없을 때 직접 경로를 테스트합니다.
+
+운영자의 플릿에서 측정: 10줄 풀이 **3개의 종료**를 `auth.mistral.ai`까지 통과시켰고, 완료된 모든 계정은 시작한 단일 종료에 머물렀습니다(도달 불가능한 풀 라인으로 종료를 잃은 두 계정은 다음 종료에서 재시도되었고 그대로 보고되었습니다).
 
 ## 📄 파일
 
 | 경로 | 내용 |
 | --- | --- |
-| `keys.txt` | chat-200 키, 한 줄에 하나 — git-ignored |
+| `keys.txt` | chat-200 키, 한 줄에 하나 — git 무시됨 |
 | `keys-ungated.txt` | 마지막 `--verify-only` 스윕에 실패한 키 — 나중에 재시도 |
-| `accounts.json` | 계정당 별칭 / 키 / 워크스페이스 / 게이트 상태 / 종료 — git-ignored |
-| `proxies.txt` | 종료 목록 — git-ignored |
+| `accounts.json` | 계정당 별칭 / 키 / 워크스페이스 / 게이트 상태 / 종료 — git 무시됨 |
+| `proxies.txt` | 종료 목록 — git 무시됨 |
 | `proxies.live.txt` | `--screen`을 통과한 종료 |
 
 ## 🔌 9Router에 연결
@@ -209,7 +219,7 @@ node src/connect-9router.js
 
 기본값: `--base http://localhost:20128`, `--password 123456`, `--name "Mistral"`, `--prefix mistral`, `--base-url https://api.mistral.ai/v1`.
 
-운영자의 패널은 같은 키를 네이티브 `mistral` 제공자 연결로 담고 있으며(**111**개 등록됨), 라우팅된 호출은 무료 플랜이 제공하는 것에 도달합니다: `POST /v1/chat/completions mistral/codestral-latest` → **200**, 반면 `mistral/mistral-medium-latest` → **503** `[429] rate_limited` — 플랜의 상한, 한 홉 떨어져서 보입니다.
+운영자의 패널은 동일한 키를 네이티브 `mistral` 제공자 연결로 보유하며(**111**개 등록됨), 라우팅된 호출은 무료 플랜이 제공하는 것에 도달합니다: `POST /v1/chat/completions mistral/codestral-latest` → **200**, 반면 `mistral/mistral-medium-latest` → **503** `[429] rate_limited` — 플랜의 상한이 한 홉 떨어진 곳에서 보입니다.
 
 ## 🔌 OmniRoute에 연결
 
@@ -221,16 +231,17 @@ node src/connect-omniroute.js
 
 기본값: `--base http://localhost:20128`, `--password 123456`, `--name "Mistral"`, `--prefix mistral`, `--base-url https://api.mistral.ai/v1`.
 
-운영자의 패널은 같은 키를 네이티브 `mistral` 제공자 연결로 담고 있으며(**111**개 등록됨), 라우팅된 호출은 무료 플랜이 제공하는 것에 도달합니다: `POST /v1/chat/completions mistral/codestral-latest` → **200**, 반면 `mistral/mistral-medium-latest` → **503** `[429] rate_limited` — 플랜의 상한, 한 홉 떨어져서 보입니다.
-## 🔑 하나의 키로 얻는 것
+운영자의 패널은 동일한 키를 네이티브 `mistral` 제공자 연결로 보유하며(**111**개 등록됨), 라우팅된 호출은 무료 플랜이 제공하는 것에 도달합니다: `POST /v1/chat/completions mistral/codestral-latest` → **200**, 반면 `mistral/mistral-medium-latest` → **503** `[429] rate_limited` — 플랜의 상한이 한 홉 떨어진 곳에서 보입니다.
+
+## 🔑 키 하나로 얻는 것
 
 | | |
 | --- | --- |
 | 🏢 제공자 | **Mistral AI** — [mistral.ai](https://mistral.ai) |
-| 🎁 제공자가 주는 것 | **Experiment** api_plan의 무료 계정과 API 키 — 카드도, 전화도, 캡차도 없음 |
-| 🔑 하나의 키로 얻는 것 | 자체 계정에 범위가 지정된 OpenAI 호환 키: 무료 플랜이 제공하는 작은 id들(`mistral-tiny-latest`, `open-mistral-nemo`, `codestral-latest`, `ministral-*`), 플랜의 속도 제한에서. 할당량은 **계정**에 있으므로, 이 도구가 키당 하나의 계정을 생성하는 것입니다 |
+| 🎁 제공자가 주는 것 | **Experiment** api_plan의 무료 계정과 API 키 — 카드도, 전화번호도, 캡차도 없음 |
+| 🔑 키 하나로 얻는 것 | 자체 계정에 범위가 지정된 OpenAI 호환 키: 무료 플랜이 제공하는 작은 id들(`mistral-tiny-latest`, `open-mistral-nemo`, `codestral-latest`, `ministral-*`), 플랜의 속도 제한 내에서. 할당량은 **계정**에 있으므로, 이 도구가 키당 하나의 계정을 만드는 것입니다 |
 | 🌐 API 형태 | OpenAI 호환: `POST https://api.mistral.ai/v1/chat/completions` |
-| 🔒 데이터 | `auth.mistral.ai` / `console.mistral.ai` / `api.mistral.ai`와 구성한 받은편지함 백엔드만 접촉됩니다; 키는 당신의 머신에 남습니다 |
+| 🔒 데이터 | `auth.mistral.ai` / `console.mistral.ai` / `api.mistral.ai`와 설정한 받은편지함 백엔드만 접촉됩니다; 키는 사용자의 컴퓨터에 남습니다 |
 
 ## 🐞 이슈
 

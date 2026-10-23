@@ -21,7 +21,7 @@
 [![OmniRoute](https://img.shields.io/badge/OmniRoute-connector-8B5CF6?style=for-the-badge)](#-connect-to-omniroute)
 [![X](https://img.shields.io/badge/X-%40bigbullapp-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/bigbullapp)
 
-[🛠 Quick start](#-quick-start) · [🎁 Free tier](#-free-tier--how-much-you-get) · [🤖 Models](#-models--all-45-of-them) · [🧪 Use the API](#-how-to-use-the-api) · [✅ Verified](#-verified-working--every-key-is-tested) · [🧭 How it works](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [⚙️ Options](#️-cli-options) · [🛰️ Proxies](#️-behind-a-proxy) · [🐞 Issues](#-issues)
+[🛠 Quick start](#-quick-start) · [🎁 Free tier](#-free-tier--how-much-you-get) · [🤖 Models](#-models--all-45-of-them) · [🧪 Use the API](#-how-to-use-the-api) · [✅ Verified](#-verified-working--every-key-is-tested) · [🧭 How it works](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [🔌 OmniRoute](#-connect-to-omniroute) · [⚙️ Options](#️-cli-options) · [🛰️ Proxies](#️-behind-a-proxy) · [🐞 Issues](#-issues)
 
 </div>
 
@@ -37,7 +37,7 @@
 
 Mistral's door is an **Ory Kratos** one: `POST /self-service/registration` takes an e-mail, a password and a name and nothing else — **no card, no phone, no captcha** — and the inbox step is a link that carries the code *and* the flow id, so the whole rail runs over plain HTTP with one mailbox alias per account. Once the session exists, the console's own billing route issues the key: `POST /api/billing/api-keys {name, workspace, primitive_access_scope:"shared_only"}` → `mstrl_…` (45 characters).
 
-The unit that scales is **one account = one key**. Measured on the operator's fleet (2026-10-19): the rail pushed **keys verified** in 12 chunks of 8 at **~14.6 s/key** with 2 workers, losing 2 accounts (one inbox that never delivered inside 180 s, one `login 400`) — no CAPTCHA wall, no rate-limit wall. All **111** answered chat-200 on `mistral-tiny-latest` **and** on `codestral-latest` — **222/222** live calls. While this repo was being verified, its own CLI minted **3 more** keys of the same shape (2 at `--conc 2` in 56 s, 1 in 26 s), each one chat-200 before it was written. What is being multiplied is the free **Experiment** api_plan, which is why the larger ids stay out of the gate (see below).
+The unit that scales is **one account = one key**. Measured on the operator's fleet (2026-10-19): the rail pushed every key in 12 chunks of 8 at **~14.6 s/key** with 2 workers, losing 2 accounts (one inbox that never delivered inside 180 s, one `login 400`) — no CAPTCHA wall, no rate-limit wall. All **111** answered chat-200 on `mistral-tiny-latest` **and** on `codestral-latest` — **222/222** live calls. While this repo was being verified, its own CLI minted **3 more** keys of the same shape (2 at `--conc 2` in 56 s, 1 in 26 s), each one chat-200 before it was written. What is being multiplied is the free **Experiment** api_plan, which is why the larger ids stay out of the gate (see below).
 
 ## 🎁 Free tier — how much you get
 
@@ -122,11 +122,6 @@ The launcher asks for the proxy list, the account count and the gate model, reme
 
 ## ✅ Verified working — every key is tested
 
-> **Quality gates.** Every key here passed a live `chat-200` before it was written to `keys.txt`
-> (dead keys are never shipped). Router combos follow the same rule at the model level: an entry is
-> added **only if the model answers `chat-200` and can call tools** — a model without tool support,
-> a dead key or a dead provider is dropped instead of added. Works with **9Router and OmniRoute**.
-
 | Check | Result |
 | --- | --- |
 | `GET /self-service/registration/api` | **200** — flow id + `csrf_token`; fields seen: `traits.email`, `password`, `traits.name.first`, `traits.name.last`, `method` |
@@ -136,7 +131,7 @@ The launcher asks for the proxy list, the account count and the gate model, reme
 | `POST /api/billing/api-keys` | **200** — `mstrl_…`, 45 characters, no card |
 | `POST https://api.mistral.ai/v1/chat/completions` — run for **every** key before it is written | **200** with real content |
 | full fleet sweep | **111/111** keys chat-200 on `mistral-tiny-latest` **and** `codestral-latest` (222/222 calls, 2026-10-19) |
-| this repo's CLI, live mint while it was being verified | **keys verified** minted and chat-200 (`--count 3` → 2 in 56 s at `--conc 2`; `--count 1` → 1 in 26 s). One account of the first batch was lost to two unreachable exits in the test pool and reported as such |
+| this repo's CLI, live mint while it was being verified | every key minted and chat-200 (`--count 3` → 2 in 56 s at `--conc 2`; `--count 1` → 1 in 26 s). One account of the first batch was lost to two unreachable exits in the test pool and reported as such |
 | a key that fails its chat check | never written to `keys.txt` |
 
 The gate's answer, verbatim (the first key the shipped CLI minted, `mistral-tiny-latest`):
@@ -144,6 +139,12 @@ The gate's answer, verbatim (the first key the shipped CLI minted, `mistral-tiny
 ```json
 {"id":"cb51dff9b36c41a08d41c8c0533885da","created":1792380045,"model":"ministral-8b-2512","usage":{"prompt_tokens":9,"total_tokens":11,"completion_tokens":2,"service_tier":"standard"},"object":"chat.completion","choices":[{"index":0,"finish_reason":"stop","message":{"role":"assistant","tool_calls":null,"content":"ok"}}]}
 ```
+
+> **Quality gates.** Every key here passed a live `chat-200` before it was written to `keys.txt`
+> (dead keys are never shipped). Router combos follow the same rule at the model level: an entry is
+> added **only if the model answers `chat-200` and can call tools** — a model without tool support,
+> a dead key or a dead provider is dropped instead of added. Re-run the verify step any time;
+> failures are reported, never hidden.
 
 ## 🧭 How it works
 
@@ -230,6 +231,7 @@ node src/connect-omniroute.js
 Defaults: `--base http://localhost:20128`, `--password 123456`, `--name "Mistral"`, `--prefix mistral`, `--base-url https://api.mistral.ai/v1`.
 
 The operator's panel carries the same keys as native `mistral` provider connections (**111** registered), and a routed call lands on whatever the free plan serves: `POST /v1/chat/completions mistral/codestral-latest` → **200**, while `mistral/mistral-medium-latest` → **503** `[429] rate_limited` — the plan's ceiling, visible one hop away.
+
 ## 🔑 What one key gets you
 
 | | |

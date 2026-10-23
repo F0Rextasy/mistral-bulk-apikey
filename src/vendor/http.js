@@ -8,14 +8,9 @@
  * session back in `Set-Cookie`, and every step of the flow has to read the
  * status code before it decides what the next one is.
  *
- * This helper itself stays fail-closed — **no exit, no request** — so a call that
- * loses its exit fails instead of silently leaking this machine's address. The
- * CLI decides the mode instead: it runs `req(proxy, …)` when a pool was given
- * and its own `directReq(url, …)` (same shape) when the user gave no pool at
- * all, which is the documented proxy-optional behaviour.
- *
- * Same request shape as the fleet's request helper:
- * `(proxy, url, {method, headers, body, timeoutMs, agent})`
+ * Same contract as the fleet's own request helper — **no exit, no request**
+ * (never a silent fall back to this machine's address) — and the same
+ * request shape: `(proxy, url, {method, headers, body, timeoutMs, agent})`
  * resolving `{status, headers, text, json, setCookie}`.
  *
  * `agent` is optional; when the caller passes one, every request of one account
