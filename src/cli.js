@@ -34,6 +34,7 @@
  *   --timeout MS     per-request timeout                           [45000]
  *   --mail-timeout MS  how long one account waits for the link    [180000]
  *   --mail <list>    inbox providers for the alias      [outlook,hotmail]
+ *   --auto           headless-friendly alias (launcher passes it; no prompts ever)   
  *   --verify-only    re-run every key in keys.txt through the chat gate
  *   --screen         only test the proxy list against Mistral
  *   --probe          environment check: exits, inbox rail, gate, keys
@@ -120,6 +121,7 @@ const MAIL_PROVIDERS = String(arg('mail', 'outlook,hotmail')).split(',').map((s)
 const PIN_MODEL = arg('model', 'mistral-tiny-latest');
 const PROXY_FILE = process.env.MISTRAL_PROXIES || arg('pool', arg('proxies', 'proxies.txt'));
 
+const AUTO = has('auto');
 const VERIFY_ONLY = has('verify-only');
 const SCREEN_ONLY = has('screen');
 const PROBE_ONLY = has('probe');
