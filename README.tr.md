@@ -181,7 +181,7 @@ node src/cli.js [mode] [flags]
 | `--model <id>` | `mistral-tiny-latest` | sabitlenmiş kapı modeli; yedek sırası bunu izler |
 | `--pool <file>` | `proxies.txt` | isteğe bağlı proxy listesi (`MISTRAL_PROXIES` ortam değişkeni de çalışır) |
 | `--gap MS` | 800 | bir işçi içinde hesaplar arası duraklama |
-| `--tries N` | 2 | hesap başına denenen çıkış sayısı |
+| `--exits N` | 6 | hesap başına denenen çıkış sayısı |
 | `--timeout MS` | 45000 | istek başına zaman aşımı |
 | `--mail-timeout MS` | 180000 | bir hesabın doğrulama bağlantısını ne kadar bekleyeceği |
 | `--mail <list>` | `outlook,hotmail` | takma ad için kullanılan gelen kutusu sağlayıcıları |

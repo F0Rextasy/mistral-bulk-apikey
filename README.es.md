@@ -181,7 +181,7 @@ node src/cli.js [mode] [flags]
 | `--model <id>` | `mistral-tiny-latest` | modelo de puerta fijado; el orden de respaldo lo sigue |
 | `--pool <file>` | `proxies.txt` | lista de proxies opcional (la variable de entorno `MISTRAL_PROXIES` también funciona) |
 | `--gap MS` | 800 | pausa entre cuentas dentro de un worker |
-| `--tries N` | 2 | salidas probadas por cuenta |
+| `--exits N` | 6 | salidas probadas por cuenta |
 | `--timeout MS` | 45000 | tiempo de espera por solicitud |
 | `--mail-timeout MS` | 180000 | cuánto espera una cuenta el enlace de verificación |
 | `--mail <list>` | `outlook,hotmail` | proveedores de buzón usados para el alias |

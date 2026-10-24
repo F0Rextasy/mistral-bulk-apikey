@@ -178,7 +178,7 @@ node src/cli.js [mode] [flags]
 | `--model <id>` | `mistral-tiny-latest` | 固定的网关模型；回退顺序跟随它 |
 | `--pool <file>` | `proxies.txt` | 可选的代理列表（`MISTRAL_PROXIES` 环境变量也可用） |
 | `--gap MS` | 800 | 同一 worker 内账户之间的暂停 |
-| `--tries N` | 2 | 每个账户尝试的出口数 |
+| `--exits N` | 6 | 每个账户尝试的出口数 |
 | `--timeout MS` | 45000 | 每个请求的超时 |
 | `--mail-timeout MS` | 180000 | 一个账户等待验证链接的时长 |
 | `--mail <list>` | `outlook,hotmail` | 用于别名的收件箱提供商 |

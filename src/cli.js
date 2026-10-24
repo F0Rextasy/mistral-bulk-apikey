@@ -30,7 +30,7 @@
  *   --model <id>     pinned gate model, fallbacks follow   [mistral-tiny-latest]
  *   --pool <file>    proxy list, one exit per line, optional (env MISTRAL_PROXIES)
  *   --gap MS         pause between accounts inside a worker         [800]
- *   --tries N        exits tried per account before giving up         [2]
+ *   --exits N        exits tried per account before giving up         [6]
  *   --timeout MS     per-request timeout                           [45000]
  *   --mail-timeout MS  how long one account waits for the link    [180000]
  *   --mail <list>    inbox providers for the alias      [outlook,hotmail]
@@ -113,7 +113,7 @@ a pool the tool connects directly.`);
 const COUNT = Math.max(1, parseInt(arg('count', '10'), 10) || 10);
 const CONC = Math.min(16, Math.max(1, parseInt(arg('conc', arg('concurrency', '2')), 10) || 2));
 const GAP_MS = Math.max(0, parseInt(arg('gap', '800'), 10) || 0);
-const TRIES = Math.max(1, parseInt(arg('tries', '2'), 10) || 2);
+const EXITS = Math.max(1, parseInt(arg('exits', '6'), 10) || 6);
 const TIMEOUT_MS = Math.max(5000, parseInt(arg('timeout', '45000'), 10) || 45000);
 const MAIL_TIMEOUT_MS = Math.max(30000, parseInt(arg('mail-timeout', '180000'), 10) || 180000);
 const MAIL_PROVIDERS = String(arg('mail', 'outlook,hotmail')).split(',').map((s) => s.trim()).filter(Boolean);
@@ -186,6 +186,12 @@ function loadExits() {
   }
   return [...new Set(lines)];
 }
+
+/** A dead exit, not a panel verdict — the flow rotates to the next candidate. */
+const isExitError = (e) =>
+  /proxy connect failed|CONNECT refused|connect timeout|connect failed|ETIMEDOUT|ECONNREFUSED|ECONNRESET|ECONNABORTED|EPIPE|ENETUNREACH|EHOSTUNREACH|EAI_AGAIN|ENOTFOUND|getaddrinfo|socket hang up|secureConnect|TLS|handshake|unparseable exit|\btimeout\b/i.test(
+    String((e && e.message) || e),
+  );
 
 // -------------------------------------------------------------- HTTP pinned
 
@@ -436,8 +442,11 @@ async function mintAccount(px, index) {
   return { address, password, person, key, keyId: (kr.json && kr.json.key_id) || '', workspace: wid, model: '', gate: last, verified };
 }
 
+/** Accounts whose every candidate died at the transport layer (not a panel verdict). */
+let deadRoutes = 0;
 async function mintOne(exits, startExit, index) {
-  for (let attempt = 0; attempt < TRIES; attempt++) {
+  let transportDead = 0;
+  for (let attempt = 0; attempt < EXITS; attempt++) {
     // Attempt 0 keeps the pinned exit; a retry walks to the next one. The step
     // is 1, not a multiple: with a 3-line pool a `+3` step lands on the same
     // exit again and burns the whole retry budget on the dead one.
@@ -445,6 +454,7 @@ async function mintOne(exits, startExit, index) {
     const px = exitLine ? parseProxy(exitLine) : null;
     if (exitLine && !px) {
       say(`  ✗ #${index + 1} unparseable exit ${mask(exitLine)}`);
+      transportDead++;
       continue;
     }
     try {
@@ -472,10 +482,16 @@ async function mintOne(exits, startExit, index) {
       say(`  ✓ #${index + 1} ${acct.address} → ${acct.key.slice(0, 12)}…  ${acct.gate.model || acct.model}  chat 200 ${acct.gate.text}`);
       return acct;
     } catch (e) {
-      say(`  ✗ #${index + 1} attempt ${attempt + 1} via ${mask(exitLine)}: ${String(e.message).slice(0, 180)}`);
+      if (isExitError(e)) {
+        transportDead++;
+        say(`  ✗ #${index + 1} exit ${attempt + 1}/${EXITS} ${mask(exitLine)} dead (${String(e.message).slice(0, 70)}) → next exit`);
+      } else {
+        say(`  ✗ #${index + 1} attempt ${attempt + 1} via ${mask(exitLine)}: ${String(e.message).slice(0, 180)}`);
+      }
       await sleep(1500 * (attempt + 1));
     }
   }
+  if (transportDead > 0 && transportDead === EXITS) deadRoutes++;
   await recordAccount({ index: index + 1, verdict: 'failed', at: new Date().toISOString() });
   return null;
 }
@@ -571,7 +587,7 @@ async function verifyOnly(exits) {
     // A key is only ever marked dead by an *answer*. A transport failure is the
     // exit's problem, so the key moves to the next exit in the pool instead of
     // being written off — a dead free exit would otherwise look like a dead key.
-    for (let attempt = 0; attempt < TRIES && !ok; attempt++) {
+    for (let attempt = 0; attempt < EXITS && !ok; attempt++) {
       const exitLine = exits[(i + attempt) % exits.length];
       const px = exitLine ? parseProxy(exitLine) : null;
       let exitFailed = false;
@@ -632,6 +648,11 @@ async function mint(exits) {
   );
   await writeChain;
   say(`done: ${ok} live key(s), ${failed} failed — keys.txt`);
+  if (!ok && failed > 0 && deadRoutes === failed) {
+    const route = exits[0] === null ? 'direct mode (no proxy list)' : `${exits.length}-exit pool`;
+    console.error(`[fatal] no usable route — ${failed} account(s) × ${EXITS} candidate(s) over ${route}: every attempt died at the transport layer.`);
+    process.exit(1);
+  }
   if (!ok) process.exitCode = 1;
 }
 

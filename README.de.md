@@ -182,7 +182,7 @@ node src/cli.js [mode] [flags]
 | `--model <id>` | `mistral-tiny-latest` | festgelegtes Gate-Modell; die Fallback-Reihenfolge folgt ihm |
 | `--pool <file>` | `proxies.txt` | optionale Proxy-Liste (die Umgebungsvariable `MISTRAL_PROXIES` funktioniert ebenfalls) |
 | `--gap MS` | 800 | Pause zwischen Konten innerhalb eines Workers |
-| `--tries N` | 2 | pro Konto versuchte Exits |
+| `--exits N` | 6 | pro Konto versuchte Exits |
 | `--timeout MS` | 45000 | Timeout pro Anfrage |
 | `--mail-timeout MS` | 180000 | wie lange ein Konto auf den Verifizierungslink wartet |
 | `--mail <list>` | `outlook,hotmail` | für den Alias verwendete Postfach-Anbieter |

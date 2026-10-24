@@ -181,7 +181,7 @@ node src/cli.js [mode] [flags]
 | `--model <id>` | `mistral-tiny-latest` | 고정 게이트 모델; 대체 순서가 이를 따름 |
 | `--pool <file>` | `proxies.txt` | 선택적 프록시 목록(`MISTRAL_PROXIES` 환경 변수도 작동) |
 | `--gap MS` | 800 | 한 워커 내 계정 사이의 일시 정지 |
-| `--tries N` | 2 | 계정당 시도할 종료 수 |
+| `--exits N` | 6 | 계정당 시도할 종료 수 |
 | `--timeout MS` | 45000 | 요청당 타임아웃 |
 | `--mail-timeout MS` | 180000 | 한 계정이 검증 링크를 기다리는 시간 |
 | `--mail <list>` | `outlook,hotmail` | 별칭에 사용되는 받은편지함 제공자 |

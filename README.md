@@ -180,7 +180,7 @@ node src/cli.js [mode] [flags]
 | `--model <id>` | `mistral-tiny-latest` | pinned gate model; the fallback order follows it |
 | `--pool <file>` | `proxies.txt` | optional proxy list (`MISTRAL_PROXIES` env works too) |
 | `--gap MS` | 800 | pause between accounts inside one worker |
-| `--tries N` | 2 | exits tried per account |
+| `--exits N` | 6 | exits tried per account |
 | `--timeout MS` | 45000 | per-request timeout |
 | `--mail-timeout MS` | 180000 | how long one account waits for the verification link |
 | `--mail <list>` | `outlook,hotmail` | inbox providers used for the alias |

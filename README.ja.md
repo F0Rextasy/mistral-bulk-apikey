@@ -181,7 +181,7 @@ node src/cli.js [mode] [flags]
 | `--model <id>` | `mistral-tiny-latest` | 固定されたゲートモデル; フォールバック順序はこれに従う |
 | `--pool <file>` | `proxies.txt` | オプションのプロキシリスト (`MISTRAL_PROXIES` 環境変数も可) |
 | `--gap MS` | 800 | 1 つのワーカー内でのアカウント間の一時停止 |
-| `--tries N` | 2 | アカウントごとに試す出口 |
+| `--exits N` | 6 | アカウントごとに試す出口 |
 | `--timeout MS` | 45000 | リクエストごとのタイムアウト |
 | `--mail-timeout MS` | 180000 | 1 つのアカウントが検証リンクを待つ時間 |
 | `--mail <list>` | `outlook,hotmail` | エイリアスに使う受信トレイプロバイダ |
